@@ -1,0 +1,8 @@
+{
+  "name": "middprime-forex-app",
+  "version": "1.0.0",
+  "description": "Simple Pi App for Forex education",
+  "scripts": {
+    "build": "echo 'Build successful' && exit 0"
+  }
+}
