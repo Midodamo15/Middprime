@@ -5,12 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Middprime Forex AI Chatbot (Pi Testnet)</title>
     
-    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <script src="https://sdk.mine.pi/pi-sdk.js"></script> 
 
     <style>
         body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
         #auth-status { margin-top: 20px; padding: 10px; background-color: #f0f0f0; border-radius: 4px; }
+        /* Add a visible button for testing the transaction */
+        #payment-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #A062D7; /* Pi purple color */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #payment-button:hover {
+            background-color: #7d4ba7;
+        }
     </style>
 </head>
 <body>
@@ -21,11 +35,42 @@
         <div id="auth-status">
             Connecting to Pi Network...
         </div>
-
-        </div>
+        
+        <button id="payment-button" style="display:none;">Click to Verify Transaction</button>
+    </div>
 
     <script>
         const statusElement = document.getElementById('auth-status');
+        const paymentButton = document.getElementById('payment-button');
+        
+        // --- PI PAYMENT FUNCTION ---
+        function startTestTransaction() {
+            const PI_AMOUNT = 0.0001; // Smallest possible Testnet amount
+
+            Pi.createPayment({
+                amount: PI_AMOUNT,
+                memo: "Pi App Verification Transaction",
+                metadata: { app: "middprime-forex-academy-verification" } 
+            }, {
+                onReadyForServerApproval: (paymentId) => {
+                    console.log(`Payment Ready: ${paymentId}`);
+                },
+                onReadyForServerCompletion: (paymentId, txid) => {
+                    statusElement.innerHTML = `✅ Transaction Successful! TXID: ${txid}`;
+                    alert("Test Transaction Successful! Step 10 should now be completed in the Pi Developer Portal.");
+                    paymentButton.style.display = 'none'; // Hide button after success
+                },
+                onCancel: (paymentId) => {
+                    alert("Transaction Canceled. Please try again to complete step 10.");
+                },
+                onError: (error, payment) => {
+                    console.error("Pi Payment Error:", error);
+                    alert("Transaction Failed. Check the console for details.");
+                }
+            });
+        }
+        // --- END PI PAYMENT FUNCTION ---
+
 
         // Initialize the Pi SDK for development/testing
         // IMPORTANT: 'sandbox: true' MUST be used for Testnet development!
@@ -34,19 +79,23 @@
             sandbox: true 
         }); 
 
-        // Define the data you want to request from the user (e.g., username)
-        const scopes = ['username'];
+        const scopes = ['username', 'payments']; // Added 'payments' scope
 
         // Authenticate the Pi user
         Pi.authenticate(scopes)
             .then(function(auth) {
                 // Authentication successful
                 const username = auth.user.username;
-                statusElement.innerHTML = `✅ Successfully logged in as: <strong>${username}</strong>`;
+                statusElement.innerHTML = `✅ Logged in as: <strong>${username}</strong>. Click the button to verify Pi payments.`;
                 
-                // --- START YOUR CHATBOT CODE HERE ---
-                // Now you can load your chatbot interface and start the AI session.
-                // --- END YOUR CHATBOT CODE HERE ---
+                // Show the button after successful login
+                paymentButton.style.display = 'block';
+                
+                // Attach the payment function to the button click
+                paymentButton.onclick = startTestTransaction;
+
+                // You can also uncomment the line below to auto-trigger the payment on login:
+                // startTestTransaction();
 
             })
             .catch(function(error) {
