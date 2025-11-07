@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Middprime Forex AI Chatbot (Pi Testnet)</title>
+    
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        #auth-status { margin-top: 20px; padding: 10px; background-color: #f0f0f0; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Middprime Forex AI!</h1>
+        <p>This is where your AI Chatbot interface will appear.</p>
+        
+        <div id="auth-status">
+            Connecting to Pi Network...
+        </div>
+
+        </div>
+
+    <script>
+        const statusElement = document.getElementById('auth-status');
+
+        // Initialize the Pi SDK for development/testing
+        // IMPORTANT: 'sandbox: true' MUST be used for Testnet development!
+        Pi.init({ 
+            version: "2.0", 
+            sandbox: true 
+        }); 
+
+        // Define the data you want to request from the user (e.g., username)
+        const scopes = ['username'];
+
+        // Authenticate the Pi user
+        Pi.authenticate(scopes)
+            .then(function(auth) {
+                // Authentication successful
+                const username = auth.user.username;
+                statusElement.innerHTML = `✅ Successfully logged in as: <strong>${username}</strong>`;
+                
+                // --- START YOUR CHATBOT CODE HERE ---
+                // Now you can load your chatbot interface and start the AI session.
+                // --- END YOUR CHATBOT CODE HERE ---
+
+            })
+            .catch(function(error) {
+                // Authentication failed
+                console.error("Pi Authentication Failed:", error);
+                statusElement.innerHTML = `🛑 Pi Authentication Failed. Please open this app in the Pi Browser.`;
+            });
+    </script>
+</body>
+</html>
