@@ -5,29 +5,107 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Middprime Forex AI Chatbot (Pi Testnet)</title>
     
+    <!-- CRITICAL: Correct Pi SDK URL using .pi domain -->
     <script src="https://sdk.mine.pi/pi-sdk.js"></script> 
 
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
-        #auth-status { margin-top: 20px; padding: 10px; background-color: #f0f0f0; border-radius: 4px; }
-        /* Add a visible button for testing the transaction */
+        /* General Styling and Container */
+        body { 
+            font-family: 'Inter', Arial, sans-serif; 
+            text-align: center; 
+            margin: 0;
+            padding: 20px;
+            background-color: #f7f7f7;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container { 
+            width: 100%;
+            max-width: 400px; 
+            margin: auto; /* Center vertically and horizontally */
+            padding: 20px; 
+            background-color: white;
+            border: 1px solid #ddd; 
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Status Display */
+        #auth-status { 
+            margin-top: 20px; 
+            padding: 15px; 
+            min-height: 40px;
+            background-color: #F3E8FF; /* Light Pi Purple */
+            color: #6D28D9;
+            border-radius: 8px; 
+            font-weight: 500;
+        }
+
+        /* Payment Button */
         #payment-button {
-            margin-top: 20px;
-            padding: 10px 20px;
+            margin-top: 25px;
+            width: 100%;
+            padding: 12px;
             background-color: #A062D7; /* Pi purple color */
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.1s ease;
         }
         #payment-button:hover {
             background-color: #7d4ba7;
         }
+        #payment-button:active {
+             transform: scale(0.98);
+        }
+
+        /* Message Overlay (Replacing alert()) */
+        #message-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: none; /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .message-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            max-width: 80%;
+            text-align: center;
+        }
+        .message-box button {
+            margin-top: 15px;
+            padding: 8px 15px;
+            background-color: #A062D7;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
+    
+    <!-- Message Modal/Overlay -->
+    <div id="message-overlay">
+        <div class="message-box">
+            <p id="message-text"></p>
+            <button onclick="document.getElementById('message-overlay').style.display='none'">Close</button>
+        </div>
+    </div>
+
     <div class="container">
         <h1>Welcome to Middprime Forex AI!</h1>
         <p>This is where your AI Chatbot interface will appear.</p>
@@ -42,9 +120,21 @@
     <script>
         const statusElement = document.getElementById('auth-status');
         const paymentButton = document.getElementById('payment-button');
+        const messageOverlay = document.getElementById('message-overlay');
+        const messageText = document.getElementById('message-text');
+
+        // Function to display messages instead of alert()
+        function displayMessage(text) {
+            messageText.innerHTML = text;
+            messageOverlay.style.display = 'flex';
+        }
         
         // --- PI PAYMENT FUNCTION ---
         function startTestTransaction() {
+            // Disable button during process
+            paymentButton.disabled = true;
+            paymentButton.textContent = 'Transaction Initiated...';
+
             const PI_AMOUNT = 0.0001; // Smallest possible Testnet amount
 
             Pi.createPayment({
@@ -54,12 +144,65 @@
             }, {
                 onReadyForServerApproval: (paymentId) => {
                     console.log(`Payment Ready: ${paymentId}`);
+                    // Note: In a real app, you would send paymentId to your backend for approval here.
                 },
                 onReadyForServerCompletion: (paymentId, txid) => {
-                    statusElement.innerHTML = `✅ Transaction Successful! TXID: ${txid}`;
-                    alert("Test Transaction Successful! Step 10 should now be completed in the Pi Developer Portal.");
+                    // This indicates the transaction is fully confirmed on the blockchain
+                    statusElement.innerHTML = `✅ **SUCCESS!** Transaction completed. Your app verification should now be complete on the Pi Developer Portal!`;
+                    displayMessage("Transaction Successful! Step 10 should now be completed in the Pi Developer Portal. TXID: " + txid);
                     paymentButton.style.display = 'none'; // Hide button after success
                 },
+                onCancel: (paymentId) => {
+                    // Re-enable button
+                    paymentButton.disabled = false;
+                    paymentButton.textContent = 'Click to Verify Transaction';
+
+                    displayMessage("Transaction Canceled. Please try again to complete step 10.");
+                },
+                onError: (error, payment) => {
+                    // Re-enable button
+                    paymentButton.disabled = false;
+                    paymentButton.textContent = 'Click to Verify Transaction';
+                    
+                    console.error("Pi Payment Error:", error);
+                    statusElement.innerHTML = `🛑 Payment Error. Check console for details.`;
+                    displayMessage("Transaction Failed. Check the console for technical details.");
+                }
+            });
+        }
+        // --- END PI PAYMENT FUNCTION ---
+
+
+        // Initialize the Pi SDK for development/testing
+        Pi.init({ 
+            version: "2.0", 
+            sandbox: true // IMPORTANT: Use 'sandbox: true' for Testnet development!
+        }); 
+
+        const scopes = ['username', 'payments']; // Needs 'payments' scope for transactions
+
+        // Authenticate the Pi user
+        Pi.authenticate(scopes)
+            .then(function(auth) {
+                // Authentication successful
+                const username = auth.user.username;
+                statusElement.innerHTML = `✅ Logged in as: <strong>${username}</strong>. Click the button below to verify Pi payments.`;
+                
+                // Show the button after successful login
+                paymentButton.style.display = 'block';
+                
+                // Attach the payment function to the button click
+                paymentButton.onclick = startTestTransaction;
+
+            })
+            .catch(function(error) {
+                // Authentication failed
+                console.error("Pi Authentication Failed:", error);
+                statusElement.innerHTML = `🛑 **Authentication Failed.** Ensure you are accessing this URL in the official Pi Browser.`;
+            });
+    </script>
+</body>
+</html>
                 onCancel: (paymentId) => {
                     alert("Transaction Canceled. Please try again to complete step 10.");
                 },
